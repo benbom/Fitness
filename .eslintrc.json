@@ -1,0 +1,5 @@
+{
+  "root": true,
+  "extends": ["@vera/eslint-config"],
+  "ignorePatterns": ["node_modules", "dist", "build", ".turbo", ".next", "coverage", "*.min.js"]
+}

@@ -77,9 +77,9 @@ Fyra icke förhandlingsbara principer:
 
 ## Framgångsmått år 1
 
-| Mått | Mål | Referens |
-|---|---|---|
-| Pass/vecka (median) | 3 | efter månad 2 |
-| D90-retention (betalande) | 55% | Sweat ~40%, Peloton ~50% |
-| Cykel-täckning | 70% | andel som loggar minst en full cykel |
-| Styrke-progress | +15% | median-ökning i volym över 12 v (nybörjar) |
+| Mått                      | Mål  | Referens                                   |
+| ------------------------- | ---- | ------------------------------------------ |
+| Pass/vecka (median)       | 3    | efter månad 2                              |
+| D90-retention (betalande) | 55%  | Sweat ~40%, Peloton ~50%                   |
+| Cykel-täckning            | 70%  | andel som loggar minst en full cykel       |
+| Styrke-progress           | +15% | median-ökning i volym över 12 v (nybörjar) |

@@ -1,0 +1,11 @@
+{
+  "name": "@vera/tsconfig",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Delade TypeScript-konfigurationer för Vera-monorepot.",
+  "files": [
+    "base.json",
+    "node.json",
+    "react.json"
+  ]
+}
