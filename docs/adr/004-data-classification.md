@@ -11,12 +11,12 @@ Cykel-, gravid- och symtomdata är den mest exponerade typen av användardata p�
 
 **Fyra känslighetsklasser styr schema, kryptering, loggning, backup-region, retention och åtkomst.**
 
-| Klass | Exempel | Skydd |
-|---|---|---|
-| **1 · Kritisk** | Cykel, gravid, symtom | Envelope-kryptering per användare. Egen KMS-nyckel. Radering < 24h. Aldrig i logg. |
-| **2 · Känslig** | Skador, RPE, hälsomål | Kolumn-kryptering. Break-glass-loggning för supportåtkomst. |
-| **3 · Personlig** | Profil, träningslogg | Standard at-rest-kryptering. |
-| **4 · Operativ** | Innehåll, teknik-logg | Öppen internt. Standard-backup. |
+| Klass             | Exempel               | Skydd                                                                              |
+| ----------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| **1 · Kritisk**   | Cykel, gravid, symtom | Envelope-kryptering per användare. Egen KMS-nyckel. Radering < 24h. Aldrig i logg. |
+| **2 · Känslig**   | Skador, RPE, hälsomål | Kolumn-kryptering. Break-glass-loggning för supportåtkomst.                        |
+| **3 · Personlig** | Profil, träningslogg  | Standard at-rest-kryptering.                                                       |
+| **4 · Operativ**  | Innehåll, teknik-logg | Öppen internt. Standard-backup.                                                    |
 
 En tabell som blandar klasser är alltid ett designfel. Enforcement: kodgranskning tvingar klassning på nya entiteter. Logger-filter (M0-16) blockerar Klass 1-fält i klartext, med enhetstest som verifierar.
 

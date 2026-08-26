@@ -11,7 +11,7 @@ Den adaptiva träningsmotorn (C-04) är vår strategiska kärna — den gör att
 
 **Egen tjänst, Python + FastAPI, statslös och deterministisk.**
 
-Motorn tar en input-snapshot (cykelfas, RPE-historik, skador, wearable-signal, programkontext) och returnerar dagens pass plus ett strukturerat *reasoning-trace* som förklarar varför.
+Motorn tar en input-snapshot (cykelfas, RPE-historik, skador, wearable-signal, programkontext) och returnerar dagens pass plus ett strukturerat _reasoning-trace_ som förklarar varför.
 
 Beslutsordning i motorn är regel-baserad först (se systemdesign §06). ML läggs på progressions-heuristiken tidigast när vi har 6 månader äkta data. Filtren (skador, livsfas) förblir regel-baserade — aldrig ML.
 

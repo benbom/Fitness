@@ -13,15 +13,15 @@ Reproducerbara procedurer för ops-arbete. En runbook är inte klar innan någon
 
 Skapas under respektive issue:
 
-| Runbook | Skapas i | Ägare |
-|---|---|---|
-| Deploy till staging | M0-04 | Platform |
-| Rollback av misslyckad deploy | M0-04 | Platform |
-| KMS-nyckelrotation | M0-11 | Platform |
-| Postgres restore från snapshot | M0-08 | Backend |
-| Incident-respons (on-call) | Innan MVP | Alla |
-| Data-radering (edge cases) | M0-25 | Backend |
-| Secrets-rotation per leverantör | M0-12 | Platform |
+| Runbook                         | Skapas i  | Ägare    |
+| ------------------------------- | --------- | -------- |
+| Deploy till staging             | M0-04     | Platform |
+| Rollback av misslyckad deploy   | M0-04     | Platform |
+| KMS-nyckelrotation              | M0-11     | Platform |
+| Postgres restore från snapshot  | M0-08     | Backend  |
+| Incident-respons (on-call)      | Innan MVP | Alla     |
+| Data-radering (edge cases)      | M0-25     | Backend  |
+| Secrets-rotation per leverantör | M0-12     | Platform |
 
 ## Format
 
