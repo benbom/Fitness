@@ -1,6 +1,7 @@
 import "server-only";
 
-export const MIN_PASSWORD_LENGTH = 12;
+export { MIN_PASSWORD_LENGTH } from "./constants";
+import { MIN_PASSWORD_LENGTH } from "./constants";
 
 export type PasswordValidationResult =
   { ok: true } | { ok: false; reason: "too_short" | "compromised" };

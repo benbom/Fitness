@@ -3,17 +3,11 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { MIN_PASSWORD_LENGTH, passwordErrorMessage, validatePassword } from "@/lib/auth/password";
+import { passwordErrorMessage, validatePassword } from "@/lib/auth/password";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signupSchema } from "@/lib/validators/signup";
 
-export type SignupFormState =
-  | { status: "idle" }
-  | {
-      status: "error";
-      fieldErrors: { email?: string; password?: string; consent?: string; form?: string };
-      values: { email: string };
-    };
+import type { SignupFormState } from "./state";
 
 /**
  * Server Action för signup.
@@ -31,6 +25,9 @@ export type SignupFormState =
  *    Vercel Function Logs kan visa detaljer.
  *  - Rate-limit (429): visas som e-post-fältfel.
  *  - Övriga Supabase-fel: loggas server-side, redirect ändå (anti-enum).
+ *
+ * OBS: `"use server"`-filer får bara exportera async functions. Typer och
+ * konstanter för state bor i ./state.ts.
  */
 export async function signupAction(
   _prev: SignupFormState,
@@ -108,9 +105,7 @@ export async function signupAction(
     console.error("[signup] Unexpected error during Supabase signUp:", err);
     return {
       status: "error",
-      fieldErrors: {
-        form: konfigFel(err),
-      },
+      fieldErrors: { form: konfigFel(err) },
       values: { email },
     };
   }
@@ -131,9 +126,7 @@ export async function signupAction(
 }
 
 /**
- * Tydligt felmeddelande baserat på vad som gick fel. Fångar de
- * vanligaste konfigurationsfelen så användaren (och du som utvecklare)
- * ser vad som saknas utan att behöva öppna Vercel-loggarna.
+ * Tydligt felmeddelande baserat på vad som gick fel.
  */
 function konfigFel(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
@@ -145,6 +138,3 @@ function konfigFel(err: unknown): string {
   }
   return "Något gick fel när kontot skulle skapas. Detaljer finns i Vercel Function Logs (Deployments → senaste → Runtime Logs).";
 }
-
-export const INITIAL_STATE: SignupFormState = { status: "idle" };
-export { MIN_PASSWORD_LENGTH };
