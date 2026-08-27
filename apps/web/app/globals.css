@@ -1,0 +1,125 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/*
+ * Vera design tokens. Ljust tema är default; mörkt tema aktiveras
+ * antingen av .dark-klassen på html (via next-themes) eller av
+ * OS-preference när ingen explicit klass finns.
+ *
+ * Palett: parchment ground, deep garnet primary, russet accent —
+ * medveten distansering från "shrink-it-and-pink" och det AI-typiska
+ * cream+terracotta-defaulten.
+ */
+
+:root {
+  --background: #f1ede4;
+  --foreground: #1a1712;
+  --card: #fbf9f4;
+  --card-foreground: #1a1712;
+  --popover: #fbf9f4;
+  --popover-foreground: #1a1712;
+  --primary: #6e1f2b;
+  --primary-foreground: #fbf9f4;
+  --secondary: #ece6d9;
+  --secondary-foreground: #1a1712;
+  --muted: #ece6d9;
+  --muted-foreground: #4a3f35;
+  --accent: #b85742;
+  --accent-foreground: #fbf9f4;
+  --destructive: #a83a2c;
+  --destructive-foreground: #fbf9f4;
+  --border: #d9d0bf;
+  --input: #d9d0bf;
+  --ring: #6e1f2b;
+  --radius: 0.5rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --background: #16130e;
+    --foreground: #f4eede;
+    --card: #1e1a14;
+    --card-foreground: #f4eede;
+    --popover: #1e1a14;
+    --popover-foreground: #f4eede;
+    --primary: #e58095;
+    --primary-foreground: #16130e;
+    --secondary: #241f17;
+    --secondary-foreground: #f4eede;
+    --muted: #241f17;
+    --muted-foreground: #8a7e6a;
+    --accent: #e89075;
+    --accent-foreground: #16130e;
+    --destructive: #e58c7c;
+    --destructive-foreground: #16130e;
+    --border: #3a322a;
+    --input: #3a322a;
+    --ring: #e58095;
+  }
+}
+
+.dark {
+  --background: #16130e;
+  --foreground: #f4eede;
+  --card: #1e1a14;
+  --card-foreground: #f4eede;
+  --popover: #1e1a14;
+  --popover-foreground: #f4eede;
+  --primary: #e58095;
+  --primary-foreground: #16130e;
+  --secondary: #241f17;
+  --secondary-foreground: #f4eede;
+  --muted: #241f17;
+  --muted-foreground: #8a7e6a;
+  --accent: #e89075;
+  --accent-foreground: #16130e;
+  --destructive: #e58c7c;
+  --destructive-foreground: #16130e;
+  --border: #3a322a;
+  --input: #3a322a;
+  --ring: #e58095;
+}
+
+@theme inline {
+  --font-display: var(--font-display), "Iowan Old Style", Georgia, serif;
+  --font-body: var(--font-body), "Helvetica Neue", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", "SF Mono", Consolas, monospace;
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background-color: var(--primary);
+  color: var(--primary-foreground);
+}
