@@ -11,7 +11,7 @@ export type SignupFormState =
   | { status: "idle" }
   | {
       status: "error";
-      fieldErrors: { email?: string; password?: string; consent?: string };
+      fieldErrors: { email?: string; password?: string; consent?: string; form?: string };
       values: { email: string };
     };
 
@@ -19,17 +19,18 @@ export type SignupFormState =
  * Server Action för signup.
  *
  * Flöde:
- *  1. Validera formulärvärden med Zod-schemat.
- *  2. Kontrollera lösenordslängd + HIBP-läcka (server-side, aldrig till klient).
- *  3. Skicka email + password till Supabase Auth med emailRedirectTo pekande
- *     mot /auth/callback så verifieringslänken landar rätt.
- *  4. Även om Supabase returnerar fel för en existerande email — vi skickar
- *     användaren till /verify oavsett. Det förhindrar user-enumeration:
- *     angriparen kan inte skilja "existerar" från "existerar inte" via UI.
+ *  1. Validera fältvärden med Zod-schemat.
+ *  2. Kontrollera lösenordslängd + HIBP-läcka (server-side).
+ *  3. Skicka email + password till Supabase Auth.
+ *  4. Redirect till /verify oavsett om Supabase godkände registreringen —
+ *     detta hindrar user-enumeration via UI-svar.
  *
- * OBS: rate-limit hanteras av Supabase Auth (per email + per IP). Vi lägger
- * inga extra räknare på vår sida i M0 — Vercels edge middleware kan
- * kompletteras senare om vi ser missbruk.
+ * Felhantering:
+ *  - Konfigurationsfel (env vars saknas, Supabase nås ej): visas som
+ *    formulär-fel med tydlig text. Loggas fullt i console.error så
+ *    Vercel Function Logs kan visa detaljer.
+ *  - Rate-limit (429): visas som e-post-fältfel.
+ *  - Övriga Supabase-fel: loggas server-side, redirect ändå (anti-enum).
  */
 export async function signupAction(
   _prev: SignupFormState,
@@ -42,7 +43,6 @@ export async function signupAction(
   };
 
   const parsed = signupSchema.safeParse(raw);
-
   if (!parsed.success) {
     const flat = parsed.error.flatten();
     return {
@@ -62,29 +62,61 @@ export async function signupAction(
   if (!passwordCheck.ok) {
     return {
       status: "error",
+      fieldErrors: { password: passwordErrorMessage(passwordCheck.reason) },
+      values: { email },
+    };
+  }
+
+  // Beräkna emailRedirectTo tidigt så vi kan logga det vid fel.
+  let emailRedirectTo: string | undefined;
+  try {
+    const headerList = await headers();
+    const host = headerList.get("x-forwarded-host") ?? headerList.get("host");
+    const proto = headerList.get("x-forwarded-proto") ?? "https";
+    if (host) {
+      emailRedirectTo = `${proto}://${host}/auth/callback`;
+    }
+  } catch (err) {
+    console.error("[signup] Kunde inte läsa request headers:", err);
+  }
+
+  // Anropa Supabase med explicit felhantering.
+  let signUpErrorStatus: number | undefined;
+  try {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: emailRedirectTo ? { emailRedirectTo } : undefined,
+    });
+
+    if (error) {
+      signUpErrorStatus = error.status;
+      console.error("[signup] Supabase signUp returned error:", {
+        status: error.status,
+        message: error.message,
+        name: error.name,
+      });
+    } else {
+      console.info("[signup] Supabase signUp ok:", {
+        userId: data.user?.id,
+        emailConfirmedAt: data.user?.email_confirmed_at,
+        emailRedirectTo,
+      });
+    }
+  } catch (err) {
+    console.error("[signup] Unexpected error during Supabase signUp:", err);
+    return {
+      status: "error",
       fieldErrors: {
-        password: passwordErrorMessage(passwordCheck.reason),
+        form: konfigFel(err),
       },
       values: { email },
     };
   }
 
-  const supabase = await createSupabaseServerClient();
-  const headerList = await headers();
-  const origin = headerList.get("origin") ?? headerList.get("host") ?? "";
-  const emailRedirectTo = origin
-    ? `https://${origin.replace(/^https?:\/\//, "")}/auth/callback`
-    : undefined;
-
-  const { error } = await supabase.auth.signUp({
-    email,
-    password,
-    options: emailRedirectTo ? { emailRedirectTo } : undefined,
-  });
-
-  // Rate-limit-fel: visa faktisk felmeddelande. Övriga fel: dölj så vi
-  // inte läcker information om användarbasen.
-  if (error && error.status === 429) {
+  // Rate-limit — visa som riktigt fel så användaren vet att vänta.
+  if (signUpErrorStatus === 429) {
     return {
       status: "error",
       fieldErrors: {
@@ -94,10 +126,24 @@ export async function signupAction(
     };
   }
 
-  // Vid alla andra fall — även fel — redirect till /verify. Vi vill inte
-  // ge angriparen möjlighet att avgöra om email finns.
-  void error;
+  // Alla andra utfall — inklusive fel — redirect till /verify för anti-enumeration.
   redirect("/verify");
+}
+
+/**
+ * Tydligt felmeddelande baserat på vad som gick fel. Fångar de
+ * vanligaste konfigurationsfelen så användaren (och du som utvecklare)
+ * ser vad som saknas utan att behöva öppna Vercel-loggarna.
+ */
+function konfigFel(err: unknown): string {
+  const message = err instanceof Error ? err.message : String(err);
+  if (message.includes("NEXT_PUBLIC_SUPABASE_URL") || message.includes("SUPABASE_ANON_KEY")) {
+    return "Supabase-konfiguration saknas i produktion. Kontrollera Vercel Environment Variables — se detaljer i Vercel Function Logs.";
+  }
+  if (message.includes("fetch") || message.includes("network")) {
+    return "Kunde inte nå Supabase. Kontrollera att Supabase-projektet är aktivt och att URL:en pekar rätt.";
+  }
+  return "Något gick fel när kontot skulle skapas. Detaljer finns i Vercel Function Logs (Deployments → senaste → Runtime Logs).";
 }
 
 export const INITIAL_STATE: SignupFormState = { status: "idle" };

@@ -15,10 +15,20 @@ export function SignupForm() {
   const emailError = state.status === "error" ? state.fieldErrors.email : undefined;
   const passwordError = state.status === "error" ? state.fieldErrors.password : undefined;
   const consentError = state.status === "error" ? state.fieldErrors.consent : undefined;
+  const formError = state.status === "error" ? state.fieldErrors.form : undefined;
   const emailValue = state.status === "error" ? state.values.email : "";
 
   return (
     <form action={formAction} className="space-y-6" noValidate>
+      {formError ? (
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+        >
+          {formError}
+        </div>
+      ) : null}
+
       <div className="space-y-2">
         <Label htmlFor="signup-email">E-post</Label>
         <Input
