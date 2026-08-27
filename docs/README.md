@@ -4,14 +4,14 @@ Kanonisk källa för produkt- och teknikbeslut. Håll aktuellt: en föråldrad d
 
 ## Struktur
 
-| Katalog                                | Innehåll                            | Ändringsprocess                            |
-| -------------------------------------- | ----------------------------------- | ------------------------------------------ |
-| [`kravspec.md`](./kravspec.md)         | Produktkrav, MoSCoW                 | PR + produktägare                          |
-| [`systemdesign.md`](./systemdesign.md) | Arkitektur, bounded contexts, stack | PR + tech lead                             |
-| [`m0.md`](./m0.md)                     | Aktuell milsten, issues             | Uppdateras löpande                         |
-| [`adr/`](./adr/)                       | Arkitekturella beslut               | Ny fil per beslut, aldrig ändra publicerad |
-| [`runbooks/`](./runbooks/)             | Ops-procedurer                      | PR, testad i staging först                 |
-| [`rfc/`](./rfc/)                       | Förslag under diskussion            | PR med `rfc`-label                         |
+| Katalog                                | Innehåll                               | Ändringsprocess                            |
+| -------------------------------------- | -------------------------------------- | ------------------------------------------ |
+| [`kravspec.md`](./kravspec.md)         | Produktkrav, MoSCoW (v0.9)             | PR + produktägare                          |
+| [`systemdesign.md`](./systemdesign.md) | Arkitektur på Vercel + Supabase (v1.0) | PR + tech lead                             |
+| [`m0.md`](./m0.md)                     | Aktuell milsten, issues                | Uppdateras löpande                         |
+| [`adr/`](./adr/)                       | Arkitekturella beslut                  | Ny fil per beslut, aldrig ändra publicerad |
+| [`runbooks/`](./runbooks/)             | Ops-procedurer                         | PR, testad i staging först                 |
+| [`rfc/`](./rfc/)                       | Förslag under diskussion               | PR med `rfc`-label                         |
 
 ## När skriver vi vad?
 

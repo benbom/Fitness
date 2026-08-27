@@ -68,11 +68,11 @@ Fyra icke förhandlingsbara principer:
 
 ## Icke-funktionella krav
 
-- **Plattform:** iOS 16+, Android 12+
+- **Plattform:** webb-först i browser (M0–M3), utvärdera React Native i M4+ enligt [ADR-009](./adr/009-web-first-launch.md). Vid nativ lansering: iOS 16+, Android 12+.
 - **Prestanda:** P50 pass-start < 2s, video-buffring < 3s på 4G
 - **Tillgänglighet:** WCAG 2.2 AA
 - **Språk:** SE + EN från launch, NO/DK/FI fas 2
-- **Integritet:** GDPR + hälsodata-klass. EU-hosting.
+- **Integritet:** GDPR + hälsodata-klass. EU-hosting (Vercel eu-region + Supabase Frankfurt).
 - **Tillförlitlighet:** 99.5% uptime, 99.9% för live-klasser
 
 ## Framgångsmått år 1

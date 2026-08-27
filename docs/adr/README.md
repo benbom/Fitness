@@ -13,15 +13,17 @@ Varje ADR har fyra sektioner:
 
 ## Index
 
-| Nr                                                | Beslut                                     | Status   |
-| ------------------------------------------------- | ------------------------------------------ | -------- |
-| [001](./001-native-mobile-over-cross-platform.md) | Native mobil framför cross-platform        | Accepted |
-| [002](./002-modular-monolith.md)                  | Modulär monolit istället för mikrotjänster | Accepted |
-| [003](./003-adaptive-engine-python.md)            | Egen adaptiv motor i Python                | Accepted |
-| [004](./004-data-classification.md)               | Data-klassning styr allt                   | Accepted |
-| [005](./005-postgres-for-everything.md)           | Postgres för allt vi äger                  | Accepted |
-| [006](./006-video-off-datapath.md)                | Video utanför datastigen                   | Accepted |
-| [007](./007-no-third-party-analytics.md)          | Ingen tredjeparts-analytics i klienten     | Accepted |
+| Nr                                                | Beslut                                      | Status                                             |
+| ------------------------------------------------- | ------------------------------------------- | -------------------------------------------------- |
+| [001](./001-native-mobile-over-cross-platform.md) | Native mobil framför cross-platform         | Superseded by [009](./009-web-first-launch.md)     |
+| [002](./002-modular-monolith.md)                  | Modulär monolit istället för mikrotjänster  | Superseded by [008](./008-vercel-supabase-host.md) |
+| [003](./003-adaptive-engine-python.md)            | Egen adaptiv motor i Python                 | Superseded by [008](./008-vercel-supabase-host.md) |
+| [004](./004-data-classification.md)               | Data-klassning styr allt                    | Accepted                                           |
+| [005](./005-postgres-for-everything.md)           | Postgres för allt vi äger                   | Accepted (via Supabase)                            |
+| [006](./006-video-off-datapath.md)                | Video utanför datastigen                    | Accepted (Mux VOD + live)                          |
+| [007](./007-no-third-party-analytics.md)          | Ingen tredjeparts-analytics i klienten      | Accepted                                           |
+| [008](./008-vercel-supabase-host.md)              | Vercel + Supabase som hostingplattform      | Accepted                                           |
+| [009](./009-web-first-launch.md)                  | Web-först lansering, mobil efter validering | Accepted                                           |
 
 ## Nästa ADR
 
