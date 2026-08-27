@@ -1,13 +1,13 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import type { Database } from "./types";
+
 interface CookieToSet {
   name: string;
   value: string;
   options?: CookieOptions;
 }
-
-import type { Database } from "./types";
 
 /**
  * Refreshar Supabase-sessionen vid varje HTTP-request som matchar
@@ -15,10 +15,11 @@ import type { Database } from "./types";
  * användaren är fortfarande inloggad enligt localStorage men servern
  * ser en utgången JWT och nekar allt bakom RLS.
  *
- * `supabase.auth.getUser()` triggar en revalidation mot Supabase.
- * Om den lyckas: uppdaterade cookies attacheras på response.
- * Om den misslyckas: cookies rensas och användaren skickas till login
- * (den logiken läggs till i #20 när auth-flödena kommer).
+ * Defensiv posture: alla anrop mot Supabase wrappas i try/catch och
+ * loggas till Vercel Function Logs vid fel. En Supabase-outage får
+ * inte 500:a hela appen — den ska bara innebära att session inte
+ * refreshas den requesten (användaren märker inget om sessionen ännu
+ * inte är utgången).
  */
 export async function updateSupabaseSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
@@ -27,31 +28,37 @@ export async function updateSupabaseSession(request: NextRequest) {
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!url || !key) {
-    // Utan konfiguration låter vi requesten gå igenom oförändrad.
-    // Runtime-fel triggas då senare av server- eller client-klienten.
     return supabaseResponse;
   }
 
-  const supabase = createServerClient<Database>(url, key, {
-    cookies: {
-      getAll() {
-        return request.cookies.getAll();
+  try {
+    const supabase = createServerClient<Database>(url, key, {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet: CookieToSet[]) {
+          cookiesToSet.forEach(({ name, value }) => {
+            request.cookies.set(name, value);
+          });
+          supabaseResponse = NextResponse.next({ request });
+          cookiesToSet.forEach(({ name, value, options }) => {
+            supabaseResponse.cookies.set(name, value, options);
+          });
+        },
       },
-      setAll(cookiesToSet: CookieToSet[]) {
-        cookiesToSet.forEach(({ name, value }) => {
-          request.cookies.set(name, value);
-        });
-        supabaseResponse = NextResponse.next({ request });
-        cookiesToSet.forEach(({ name, value, options }) => {
-          supabaseResponse.cookies.set(name, value, options);
-        });
-      },
-    },
-  });
+    });
 
-  // Måste anropas — Supabase-SSR-mönstret bygger på att getUser() triggar
-  // cookie-refresh när JWT är nära utgång.
-  await supabase.auth.getUser();
+    const { error } = await supabase.auth.getUser();
+    if (error && error.message !== "Auth session missing!") {
+      console.warn("[middleware] Supabase getUser returned error:", {
+        status: error.status,
+        message: error.message,
+      });
+    }
+  } catch (err) {
+    console.error("[middleware] Unexpected error refreshing session:", err);
+  }
 
   return supabaseResponse;
 }
