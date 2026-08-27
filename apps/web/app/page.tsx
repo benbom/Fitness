@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
@@ -35,8 +37,8 @@ export default function HomePage() {
           </p>
 
           <div className="flex flex-col gap-3 pt-4 sm:flex-row">
-            <Button size="lg" disabled>
-              Snart öppet för intresseanmälan
+            <Button size="lg" asChild>
+              <Link href="/signup">Skapa konto</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
               <a href="https://github.com/benbom/Fitness/blob/main/docs/kravspec.md">
