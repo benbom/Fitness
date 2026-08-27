@@ -1,12 +1,43 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": [".env", ".env.local"],
-  "globalPassThroughEnv": ["CI", "NODE_ENV"],
+  "globalPassThroughEnv": [
+    "CI",
+    "NODE_ENV",
+    "VERCEL",
+    "VERCEL_ENV",
+    "VERCEL_URL",
+    "VERCEL_REGION",
+    "VERCEL_GIT_COMMIT_SHA",
+    "VERCEL_GIT_COMMIT_REF"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "build/**"],
-      "inputs": ["$TURBO_DEFAULT$", ".env.production"]
+      "inputs": ["$TURBO_DEFAULT$", ".env.production"],
+      "env": [
+        "NEXT_PUBLIC_APP_ENV",
+        "NEXT_PUBLIC_APP_VERSION",
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY",
+        "NEXT_PUBLIC_SANITY_PROJECT_ID",
+        "NEXT_PUBLIC_SANITY_DATASET",
+        "NEXT_PUBLIC_POSTHOG_KEY",
+        "NEXT_PUBLIC_POSTHOG_HOST",
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "DATABASE_URL",
+        "DIRECT_URL",
+        "STRIPE_SECRET_KEY",
+        "STRIPE_WEBHOOK_SECRET",
+        "MUX_TOKEN_ID",
+        "MUX_TOKEN_SECRET",
+        "SANITY_API_TOKEN",
+        "RESEND_API_KEY",
+        "SENTRY_DSN",
+        "SENTRY_AUTH_TOKEN"
+      ]
     },
     "lint": {
       "outputs": []
