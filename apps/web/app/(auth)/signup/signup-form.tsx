@@ -6,11 +6,13 @@ import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
 
-import { INITIAL_STATE, MIN_PASSWORD_LENGTH, signupAction } from "./actions";
+import { signupAction } from "./actions";
+import { INITIAL_SIGNUP_STATE } from "./state";
 
 export function SignupForm() {
-  const [state, formAction] = useActionState(signupAction, INITIAL_STATE);
+  const [state, formAction] = useActionState(signupAction, INITIAL_SIGNUP_STATE);
 
   const emailError = state.status === "error" ? state.fieldErrors.email : undefined;
   const passwordError = state.status === "error" ? state.fieldErrors.password : undefined;
