@@ -1,7 +1,9 @@
 # ADR-001: Native mobil framför cross-platform
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-009](./009-web-first-launch.md) på 2026-08-27
 **Datum:** 2026-08-26
+
+> **Superseded-not:** Vi lanserar webb-först på Vercel; nativ mobil är omplanerad till efter first-100-users-validering. Original-beslutet nedan bevaras som beslutshistorik.
 
 ## Kontext
 

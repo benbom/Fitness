@@ -1,7 +1,9 @@
 # ADR-002: Modulär monolit istället för mikrotjänster
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-008](./008-vercel-supabase-host.md) på 2026-08-27
 **Datum:** 2026-08-26
+
+> **Superseded-not:** Vi flyttade från självförvaltad NestJS-monolit på AWS ECS till Next.js Route Handlers på Vercel. Bounded contexts som organisationsprincip är oförändrad — men de bor nu i en Next.js-app, inte en långlivad Node-process. Original-beslutet nedan bevaras som beslutshistorik.
 
 ## Kontext
 

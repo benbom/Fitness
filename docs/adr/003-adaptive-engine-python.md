@@ -1,7 +1,9 @@
 # ADR-003: Egen adaptiv motor i Python
 
-**Status:** Accepted
+**Status:** Superseded by [ADR-008](./008-vercel-supabase-host.md) på 2026-08-27
 **Datum:** 2026-08-26
+
+> **Superseded-not:** Vi implementerar motorn i TypeScript som Next.js Serverless Function på Vercel. Beslutsordningen (skador → livsfas → återhämtning → cykelfas → progression) är oförändrad — bara språket byter. ML-versionen (år 2+) kan fortfarande läggas som separat Python-tjänst om regel-motorn inte räcker. Original-beslutet nedan bevaras som beslutshistorik.
 
 ## Kontext
 
