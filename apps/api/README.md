@@ -78,3 +78,19 @@ GET /health/live
 ```
 
 `/health/ready` med db/redis/ory-check läggs till i M0-18.
+
+## Loggning &amp; request-id (M0-16)
+
+Pino via `nestjs-pino`. Konfiguration i [`src/common/logger.module.ts`](./src/common/logger.module.ts).
+
+**Format** — JSON i staging/prod, pretty-printad i `development`, tystad helt i `test`. Varje logg-rad har `env`, `version`, `gitSha` som bas.
+
+**Request-id** — inkommande `x-request-id` header propageras; saknas den genereras UUID. Samma id sätts som response-header och kopplas till varje logg-rad under requestens livstid. Downstream-tjänster kan följa hela kedjan genom att titta på headern.
+
+**Klass 1-redaktion (ADR-004)** — logger-filter censorerar automatiskt fält som `cycleEntry`, `symptoms`, `flow`, `lifeStage`, `pregnancyStatus` (och snake_case-varianter) upp till tre nivåer djupt, både i egna logg-anrop och i pino-http:s req/res-serializers. Testad i [`redaction.spec.ts`](./src/common/redaction.spec.ts).
+
+Lägg **aldrig** till nya Klass 1-fält utan att också:
+
+1. Uppdatera [ADR-004](../../docs/adr/004-data-classification.md) om det utökar kategorin.
+2. Utöka `KLASS_1_FIELD_NAMES` i [`redaction.ts`](./src/common/redaction.ts).
+3. Lägg till ett testfall i [`redaction.spec.ts`](./src/common/redaction.spec.ts).
