@@ -1,3 +1,6 @@
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/require-user";
 import { db } from "@/lib/db";
 import type { Equipment, Goal, Level } from "@/lib/validators/profile";
@@ -49,6 +52,12 @@ export default async function ProfileSetupPage() {
       </div>
 
       <ProfileForm initial={initial} />
+
+      <div className="mt-16 border-t border-border pt-6">
+        <Button asChild variant="ghost" size="sm">
+          <Link href="/profile/data">Din data · export &amp; radering →</Link>
+        </Button>
+      </div>
     </div>
   );
 }
