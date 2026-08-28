@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { MIN_PASSWORD_LENGTH } from "@/lib/auth/constants";
+import { SIGNUP_CONSENT_TEXT } from "@/lib/consent/text";
 
 import { signupAction } from "./actions";
 import { INITIAL_SIGNUP_STATE } from "./state";
@@ -83,10 +84,7 @@ export function SignupForm() {
             aria-describedby={consentError ? "signup-consent-error" : undefined}
             required
           />
-          <span>
-            Jag godkänner Veras villkor och integritetspolicy. Jag förstår att min träningsdata
-            lagras i EU och inte delas med annonsnätverk.
-          </span>
+          <span>{SIGNUP_CONSENT_TEXT}</span>
         </label>
         {consentError ? (
           <p id="signup-consent-error" className="text-sm text-destructive">

@@ -47,6 +47,43 @@ enum Equipment {
   outdoor
 }
 
+/// Typ av samtycke. Utökas när nya samtyckesytor tillkommer.
+enum ConsentType {
+  terms_privacy
+  marketing
+  health_data
+}
+
+/// Om samtycket gavs eller drogs tillbaka.
+enum ConsentAction {
+  granted
+  revoked
+}
+
+/// Append-only samtyckesloggning (ADR-004, M0-23).
+///
+/// En rad per samtyckesbeslut. Aldrig UPDATE eller DELETE i application-
+/// koden — revoke är ny rad med action=revoked, inte redigering av
+/// tidigare rad. Detta ger en immutable audit trail som klarar
+/// GDPR-granskning.
+///
+/// Cascade delete via FK till auth.users(id) — hela historiken försvinner
+/// när kontot raderas. RLS: bara ägaren får läsa/insertera egna rader,
+/// inga UPDATE/DELETE-policies (application-level enforced).
+model Consent {
+  id        String        @id @default(uuid()) @db.Uuid
+  userId    String        @map("user_id") @db.Uuid
+  type      ConsentType
+  action    ConsentAction
+  textShown String        @map("text_shown")
+  screenId  String        @map("screen_id")
+  userAgent String?       @map("user_agent")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  @@index([userId, type, createdAt(sort: Desc)])
+  @@map("consent")
+}
+
 /// Profile — en rad per användare (C-02).
 ///
 /// `id` matchar `auth.users(id)` i Supabase — FK och ON DELETE CASCADE

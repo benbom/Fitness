@@ -4,6 +4,8 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { passwordErrorMessage, validatePassword } from "@/lib/auth/password";
+import { logConsent } from "@/lib/consent/log";
+import { SIGNUP_CONSENT_TEXT } from "@/lib/consent/text";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signupSchema } from "@/lib/validators/signup";
 
@@ -100,6 +102,23 @@ export async function signupAction(
         emailConfirmedAt: data.user?.email_confirmed_at,
         emailRedirectTo,
       });
+
+      // Logga samtyckesbeslutet så vi har audit trail (ADR-004, M0-23).
+      // Fail-open: om loggen inte kan skrivas, låt inte det stoppa
+      // användarens signup — kontot är redan skapat i Supabase.
+      if (data.user?.id) {
+        try {
+          await logConsent({
+            userId: data.user.id,
+            type: "terms_privacy",
+            action: "granted",
+            textShown: SIGNUP_CONSENT_TEXT,
+            screenId: "signup",
+          });
+        } catch (consentErr) {
+          console.error("[signup] Failed to log consent (non-fatal):", consentErr);
+        }
+      }
     }
   } catch (err) {
     console.error("[signup] Unexpected error during Supabase signUp:", err);
