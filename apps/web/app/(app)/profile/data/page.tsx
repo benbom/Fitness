@@ -90,12 +90,12 @@ export default async function DataPage() {
           <div className="mb-4 space-y-1">
             <h2 className="font-display text-2xl font-medium tracking-tight">Radera konto</h2>
             <p className="text-sm text-muted-foreground">
-              Kommer i nästa uppdatering (M0-25). Redan nu: kontakta oss så tar vi bort ditt konto
-              manuellt inom 24h.
+              Ta bort allt Vera vet om dig, eller anonymisera för intern statistik. Går inte att
+              ångra — ladda ner exporten först om du vill spara ditt spår.
             </p>
           </div>
-          <Button disabled size="lg" variant="outline">
-            Radera konto — kommer snart
+          <Button asChild size="lg" variant="destructive">
+            <Link href="/profile/delete">Fortsätt till radering</Link>
           </Button>
         </section>
 
