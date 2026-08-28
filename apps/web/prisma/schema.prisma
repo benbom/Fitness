@@ -1,15 +1,16 @@
 // Vera Prisma schema.
 //
 // Datasource pekar mot Supabase Postgres via DATABASE_URL (pooled
-// connection för runtime queries) och DIRECT_URL (direct connection
-// för prisma migrate). Båda finns i .env.example.
+// connection för runtime queries) och DIRECT_URL (Session pooler för
+// prisma migrate). Båda finns i .env.example.
 //
-// Modeller läggs till per bounded context i respektive PR:
-//  - Profile        → M0-26 (#26) — utökas med mål, nivå, utrustning m.m.
-//  - InjuryFlag     → M0-29 (#29) — Klass 2 med kolumn-kryptering
-//  - Consent        → M0-23 (#23) — append-only samtyckesloggning
-//  - Subscription   → M0-33 (#33)
-//  - CycleEntry osv → M2 — Klass 1 med pgsodium (ADR-004)
+// Ansvarsfördelning:
+//  - Prisma äger tabellstruktur och kolumner
+//  - Supabase äger auth-schemat (`auth.users` är källa för id)
+//  - RLS-policies deklareras i SQL-migrationsfilerna (Prisma stödjer
+//    inte native RLS-uttryck)
+//
+// Modeller läggs till per bounded context i respektive PR.
 
 generator client {
   provider        = "prisma-client-js"
@@ -23,17 +24,49 @@ datasource db {
   extensions = [pgsodium, pgcrypto, pg_stat_statements]
 }
 
-/// Profile — en rad per användare, id = auth.users(id) i Supabase.
+/// Vad användaren siktar mot. Multi-select — flera mål samtidigt tillåtna.
+enum Goal {
+  get_stronger
+  feel_better
+  postpartum_recovery
+  perimenopause
+  event_prep
+}
+
+/// Erfarenhetsnivå. Styr initial programgenerering (adaptiv motor, C-04).
+enum Level {
+  beginner
+  experienced
+  lifts_heavy
+}
+
+/// Tillgänglig utrustning. Multi-select — filtrerar övningsval.
+enum Equipment {
+  home
+  gym
+  outdoor
+}
+
+/// Profile — en rad per användare (C-02).
 ///
-/// I M0-14 är denna medvetet minimal (bara id + timestamps). #26 utökar
-/// med goals, level, equipment, days_per_week, time_per_session, notif_prefs.
+/// `id` matchar `auth.users(id)` i Supabase — FK och ON DELETE CASCADE
+/// deklareras i migrationsfilerna, eftersom Prisma inte uttrycker
+/// cross-schema-FK direkt.
 ///
-/// FK till auth.users(id) och RLS-policies läggs som SQL i första
-/// migration av #26 — Prisma kan inte uttrycka cross-schema FK direkt.
+/// RLS: bara ägaren får läsa/skriva sin egen rad. Enforcement i migration.
+///
+/// Data-klass: 3 (Personlig, ADR-004). Injury-flaggor (Klass 2)
+/// hanteras separat i #29 med kolumn-kryptering.
 model Profile {
-  id        String   @id @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id             String      @id @db.Uuid
+  goals          Goal[]      @default([])
+  level          Level?
+  equipment      Equipment[] @default([])
+  daysPerWeek    Int?        @map("days_per_week")
+  timePerSession Int?        @map("time_per_session")
+  notifPrefs     Json        @default("{}") @map("notif_prefs")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
 
   @@map("profile")
 }
