@@ -13,9 +13,9 @@
     "clean": "rm -rf .next node_modules/.cache",
     "supabase:types": "supabase gen types typescript --project-id $SUPABASE_PROJECT_ID --schema public > lib/supabase/types.ts",
     "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
+    "db:migrate": "dotenv -e ../../.env.local -- prisma migrate dev",
     "db:migrate:deploy": "prisma migrate deploy",
-    "db:studio": "prisma studio",
+    "db:studio": "dotenv -e ../../.env.local -- prisma studio",
     "db:format": "prisma format"
   },
   "dependencies": {
@@ -44,6 +44,7 @@
     "@vera/eslint-config": "workspace:*",
     "@vera/tsconfig": "workspace:*",
     "autoprefixer": "^10.4.20",
+    "dotenv-cli": "^7.4.2",
     "eslint": "^8.57.1",
     "eslint-config-next": "^15.0.3",
     "postcss": "^8.4.47",
