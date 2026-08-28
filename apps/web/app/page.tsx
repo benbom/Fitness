@@ -41,11 +41,17 @@ export default function HomePage() {
               <Link href="/signup">Skapa konto</Link>
             </Button>
             <Button size="lg" variant="outline" asChild>
-              <a href="https://github.com/benbom/Fitness/blob/main/docs/kravspec.md">
-                Läs kravspecen
-              </a>
+              <Link href="/login">Logga in</Link>
             </Button>
           </div>
+          <p className="pt-2 text-sm text-muted-foreground">
+            <a
+              href="https://github.com/benbom/Fitness/blob/main/docs/kravspec.md"
+              className="underline-offset-4 hover:underline"
+            >
+              Läs kravspecen på GitHub
+            </a>
+          </p>
         </div>
       </div>
 
