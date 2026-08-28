@@ -31,9 +31,10 @@ const sentryOptions = {
   // Deaktivera Sentry-CLI-uppladdning om auth-token saknas
   disableLogger: true,
 
-  // Tunnla Sentry-events genom vår egen /monitoring-route för att kringgå
-  // adblockers — undviker att prod-fel försvinner i användarens uBlock Origin
-  tunnelRoute: "/monitoring",
+  // Tunnel-route är AV i M0 — det lägger middleware-rewrites som
+  // kan förlänga edge-invocation och riskera MIDDLEWARE_INVOCATION_TIMEOUT.
+  // Läggs tillbaka när vi ser adblocker-orsakade tapp i prod-metrics.
+  // tunnelRoute: "/monitoring",
 };
 
 export default withSentryConfig(config, sentryOptions);
