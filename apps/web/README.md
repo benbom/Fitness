@@ -10,6 +10,8 @@ Vera webbklient — Next.js 15 App Router på Vercel enligt [ADR-009](../../docs
 - shadcn/ui (Radix Primitives + CVA)
 - next-themes för ljust/mörkt tema
 - Google Fonts: Fraunces (display) + DM Sans (body) via `next/font`
+- Prisma 5 mot Supabase Postgres (datamodell)
+- @supabase/ssr för auth + session-hantering
 
 ## Struktur
 
@@ -39,11 +41,48 @@ apps/web/
 Från repo-roten:
 
 ```bash
-pnpm --filter @vera/web dev         # http://localhost:3000
-pnpm --filter @vera/web build       # produktionsbygge
-pnpm --filter @vera/web lint        # Next.js + delade regler
+pnpm --filter @vera/web dev              # http://localhost:3000
+pnpm --filter @vera/web build            # prisma generate + next build
+pnpm --filter @vera/web lint
 pnpm --filter @vera/web typecheck
+
+# Prisma / databas
+pnpm --filter @vera/web db:generate      # generera Prisma-klient
+pnpm --filter @vera/web db:migrate       # skapa + applicera migration lokalt
+pnpm --filter @vera/web db:migrate:deploy # applicera migrationer i prod (körs manuellt vid deploy)
+pnpm --filter @vera/web db:studio        # webbaserad db-editor
+pnpm --filter @vera/web db:format        # formatera schema.prisma
 ```
+
+## Prisma + Supabase
+
+Prisma är ORM:et; Supabase är hosten. Fördelning av ansvar:
+
+| Vad                    | Var det bor                      | Skäl                                                            |
+| ---------------------- | -------------------------------- | --------------------------------------------------------------- |
+| Datamodell (schema)    | `prisma/schema.prisma`           | Typad, versionerad tillsammans med koden                        |
+| Migrations             | `prisma/migrations/*.sql`        | Prisma genererar, vi committar SQL:en                           |
+| Auth (users, sessions) | Supabase-managerad `auth`-schema | Supabase äger, vi refererar bara `auth.users(id)`               |
+| RLS-policies           | SQL i migrations                 | Prisma stöder inte RLS direkt — vi skriver policies som raw SQL |
+| Klass 1-kryptering     | `pgsodium`-extensionen           | Deklareras i `extensions = [...]` i schema.prisma               |
+
+**Migrations-flöde för nya tabeller** (M0-26 och framåt):
+
+1. Editera `prisma/schema.prisma` med ny modell
+2. Kör `pnpm --filter @vera/web db:migrate` — Prisma genererar SQL, applicerar lokalt, sparar i `prisma/migrations/`
+3. Editera den genererade SQL:en om nödvändigt (t.ex. lägga till FK till `auth.users(id)`, RLS-policies)
+4. Committa både schema.prisma och migrations-mappen
+5. På deploy: `db:migrate:deploy` applicerar migrationer mot prod-databasen (körs manuellt eller via CI)
+
+**Klient-användning** — importera från `@/lib/db`:
+
+```ts
+import { db } from "@/lib/db";
+
+const profile = await db.profile.findUnique({ where: { id: userId } });
+```
+
+`lib/db.ts` är `server-only` och exporterar en singleton så vi inte skapar nya connections vid varje hot-reload.
 
 ## Design-tokens
 

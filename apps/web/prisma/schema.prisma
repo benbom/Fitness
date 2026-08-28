@@ -1,0 +1,39 @@
+// Vera Prisma schema.
+//
+// Datasource pekar mot Supabase Postgres via DATABASE_URL (pooled
+// connection för runtime queries) och DIRECT_URL (direct connection
+// för prisma migrate). Båda finns i .env.example.
+//
+// Modeller läggs till per bounded context i respektive PR:
+//  - Profile        → M0-26 (#26) — utökas med mål, nivå, utrustning m.m.
+//  - InjuryFlag     → M0-29 (#29) — Klass 2 med kolumn-kryptering
+//  - Consent        → M0-23 (#23) — append-only samtyckesloggning
+//  - Subscription   → M0-33 (#33)
+//  - CycleEntry osv → M2 — Klass 1 med pgsodium (ADR-004)
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgsodium, pgcrypto, pg_stat_statements]
+}
+
+/// Profile — en rad per användare, id = auth.users(id) i Supabase.
+///
+/// I M0-14 är denna medvetet minimal (bara id + timestamps). #26 utökar
+/// med goals, level, equipment, days_per_week, time_per_session, notif_prefs.
+///
+/// FK till auth.users(id) och RLS-policies läggs som SQL i första
+/// migration av #26 — Prisma kan inte uttrycka cross-schema FK direkt.
+model Profile {
+  id        String   @id @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("profile")
+}
