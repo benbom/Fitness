@@ -38,6 +38,9 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
+      - name: Prisma generate
+        run: pnpm --filter @vera/web db:generate
+
       - name: Format check
         run: pnpm format:check
 
