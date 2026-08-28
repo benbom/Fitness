@@ -54,13 +54,19 @@ export default async function HomePage() {
           </h1>
 
           {user ? (
-            <div className="space-y-4">
+            <div className="space-y-6">
               <p className="max-w-2xl text-pretty font-display text-xl leading-snug text-muted-foreground">
-                Du är inloggad som <strong className="text-foreground">{user.email}</strong>. Din
-                profil, dina program och första passet dyker upp här när M1 (Core träning) landar.
+                Du är inloggad som <strong className="text-foreground">{user.email}</strong>. Sätt
+                din profil så vi vet vilka pass som passar dig — du kan ändra dem när som helst.
               </p>
+              <div className="flex flex-col gap-3 pt-2 sm:flex-row">
+                <Button size="lg" asChild>
+                  <Link href="/profile/setup">Sätt din profil</Link>
+                </Button>
+              </div>
               <p className="max-w-2xl text-sm text-muted-foreground">
-                Fram tills dess: du kan följa utvecklingen i{" "}
+                Din träningsplan och första passet dyker upp här när M1 (Core träning) landar. Följ
+                utvecklingen i{" "}
                 <a
                   href="https://github.com/benbom/Fitness/milestone/1"
                   className="text-primary underline-offset-4 hover:underline"
