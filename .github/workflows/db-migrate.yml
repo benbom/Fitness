@@ -1,0 +1,87 @@
+name: DB Migrate
+
+# Applicerar Prisma-migrationer mot Supabase när nya migrationsfiler mergas.
+# Trigger:
+#   - push till main
+#   - AND ändring i apps/web/prisma/migrations/** eller i denna workflow-fil
+#
+# Kräver GitHub Secrets:
+#   DATABASE_URL — Transaction Pooler (port 6543, ?pgbouncer=true)
+#   DIRECT_URL   — Session Pooler (port 5432, ingen pgbouncer)
+#
+# Se apps/web/README.md avsnittet "CI-driven migrations" för hur secrets
+# sätts upp och verifieras.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/prisma/migrations/**"
+      - "apps/web/prisma/schema.prisma"
+      - ".github/workflows/db-migrate.yml"
+  workflow_dispatch: # manuell trigger via GitHub UI vid behov
+
+concurrency:
+  # Kör aldrig två migrationer samtidigt — de skulle konkurrera om
+  # samma _prisma_migrations-lock i databasen och kunna korrumpera state.
+  group: db-migrate-main
+  cancel-in-progress: false
+
+env:
+  TURBO_TELEMETRY_DISABLED: 1
+
+jobs:
+  migrate:
+    name: Applicera Prisma-migrationer
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.12.0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Prisma generate
+        run: pnpm --filter @vera/web db:generate
+
+      - name: Verify secrets are configured
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: |
+          if [ -z "${DATABASE_URL}" ]; then
+            echo "::error::DATABASE_URL secret saknas. Lägg till på github.com/benbom/Fitness/settings/secrets/actions"
+            exit 1
+          fi
+          if [ -z "${DIRECT_URL}" ]; then
+            echo "::error::DIRECT_URL secret saknas. Lägg till på github.com/benbom/Fitness/settings/secrets/actions"
+            exit 1
+          fi
+
+      - name: Migrate deploy
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
+        run: pnpm --filter @vera/web db:migrate:deploy:ci
+
+      - name: Notify success
+        if: success()
+        run: |
+          echo "::notice::Prisma-migrationer applicerade mot Supabase."
+
+      - name: Notify failure
+        if: failure()
+        run: |
+          echo "::error::Migration failed. Kolla logs för orsak. Rulla tillbaka via commit-revert om nödvändigt — Prisma migrate deploy är append-only, ingen automatisk rollback finns."
