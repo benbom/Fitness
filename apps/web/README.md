@@ -71,8 +71,27 @@ Prisma är ORM:et; Supabase är hosten. Fördelning av ansvar:
 1. Editera `prisma/schema.prisma` med ny modell
 2. Kör `pnpm --filter @vera/web db:migrate` — Prisma genererar SQL, applicerar lokalt, sparar i `prisma/migrations/`
 3. Editera den genererade SQL:en om nödvändigt (t.ex. lägga till FK till `auth.users(id)`, RLS-policies)
-4. Committa både schema.prisma och migrations-mappen
-5. På deploy: `db:migrate:deploy` applicerar migrationer mot prod-databasen (körs manuellt eller via CI)
+4. Committa både schema.prisma och migrations-mappen i din PR
+5. När PR:en mergas till main → GitHub Actions kör `db:migrate:deploy:ci` automatiskt mot Supabase (se `.github/workflows/db-migrate.yml`)
+
+## CI-driven migrations
+
+Workflow:en `db-migrate.yml` triggas när något ändras under `apps/web/prisma/migrations/`. Den behöver två GitHub Secrets:
+
+| Secret         | Värde                                                                    |
+| -------------- | ------------------------------------------------------------------------ |
+| `DATABASE_URL` | Transaction Pooler-URL (port 6543, `?pgbouncer=true`) — samma som Vercel |
+| `DIRECT_URL`   | Session Pooler-URL (port 5432) — samma som Vercel                        |
+
+**Sätt upp secrets:**
+
+1. Gå till https://github.com/benbom/Fitness/settings/secrets/actions
+2. New repository secret → namn `DATABASE_URL`, value = samma som i din `.env.local`
+3. Repeat för `DIRECT_URL`
+
+**Manuell trigger:** Actions-fliken → "DB Migrate" → Run workflow. Använd om du behöver applicera en existerande migration mot en ny miljö utan att pusha kod.
+
+**Rollback:** Prisma migrate deploy är append-only. Om en migration måste ångras: skapa en NY migration som gör motsatsen och pusha. Databasen har ingen automatisk rollback.
 
 **Klient-användning** — importera från `@/lib/db`:
 
