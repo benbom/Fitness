@@ -2,14 +2,18 @@ import * as Sentry from "@sentry/nextjs";
 
 import { scrubKlass1 } from "@/lib/sentry/scrub";
 
+const environment =
+  process.env.NEXT_PUBLIC_VERCEL_ENV ?? process.env.NEXT_PUBLIC_APP_ENV ?? "development";
+
 Sentry.init({
   dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Anpassa efter miljö
-  environment: process.env.NEXT_PUBLIC_APP_ENV ?? "development",
+  // Vercel injicerar NEXT_PUBLIC_VERCEL_ENV automatiskt som production/preview/development
+  // beroende på deploy-typ. Faller tillbaka till manuell NEXT_PUBLIC_APP_ENV lokalt.
+  environment,
 
   // Sampling — full på dev, 10% på prod
-  tracesSampleRate: process.env.NEXT_PUBLIC_APP_ENV === "production" ? 0.1 : 1.0,
+  tracesSampleRate: environment === "production" ? 0.1 : 1.0,
 
   // Session Replay: AV i M0 tills vi utformat regler för Klass 1-data
   replaysSessionSampleRate: 0,

@@ -15,9 +15,11 @@ const sentryOptions = {
   // Auth token för att ladda upp source maps till Sentry
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
-  // Vera-organisation + project i Sentry — anpassas när Sentry-projektet finns
-  // org: "vera",
-  // project: "vera-web",
+  // Sentry-org och projekt — matchar sentry.io-projektet 'javascript-nextjs'
+  // under org 'lieber-tech'. Utan dessa laddas source-maps inte upp och
+  // stacktraces visar minifierad kod istället för TypeScript-källor.
+  org: "lieber-tech",
+  project: "javascript-nextjs",
 
   // Tystnare bygg om Sentry-auth saknas (första lokala bygget kan sakna det)
   silent: !process.env.CI,
