@@ -18,6 +18,9 @@ jobs:
     name: Lint · typecheck · test · build
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write # för att kunna posta coverage-kommentar
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,8 +53,16 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
-      - name: Test
-        run: pnpm test
+      - name: Test with coverage
+        run: pnpm --filter @vera/web test:coverage
+
+      - name: Report coverage on PR
+        if: github.event_name == 'pull_request'
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          working-directory: apps/web
+          json-summary-path: coverage/coverage-summary.json
+          json-final-path: coverage/coverage-final.json
 
       - name: Build
         run: pnpm build
