@@ -1,6 +1,8 @@
 import { requireUser } from "@/lib/auth/require-user";
 import { decryptColumnNullable } from "@/lib/crypto/column";
 import { db } from "@/lib/db";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 
 /**
  * GDPR-dataexport (M0-24, M0-39, F-PR-03).
@@ -25,6 +27,7 @@ import { db } from "@/lib/db";
  */
 export async function GET() {
   const user = await requireUser("/profile/data");
+  const logger = log.child({ requestId: await getRequestId(), route: "export", userId: user.id });
 
   const [profile, consents, injuryFlags] = await Promise.all([
     db.profile.findUnique({ where: { id: user.id } }),
@@ -43,7 +46,7 @@ export async function GET() {
     try {
       note = decryptColumnNullable(row.note);
     } catch (err) {
-      console.error("[export] Kunde inte dekryptera injury note:", err);
+      logger.error("Kunde inte dekryptera injury note", { err, injuryFlagId: row.id });
     }
     return {
       id: row.id,
@@ -76,6 +79,12 @@ export async function GET() {
   };
 
   const filename = `vera-export-${new Date().toISOString().slice(0, 10)}.json`;
+
+  logger.info("data export delivered", {
+    profileIncluded: profile !== null,
+    consentRows: consents.length,
+    injuryRows: injuryFlagsExported.length,
+  });
 
   return new Response(JSON.stringify(payload, null, 2), {
     headers: {

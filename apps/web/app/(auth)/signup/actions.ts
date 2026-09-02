@@ -6,6 +6,8 @@ import { redirect } from "next/navigation";
 import { passwordErrorMessage, validatePassword } from "@/lib/auth/password";
 import { logConsent } from "@/lib/consent/log";
 import { SIGNUP_CONSENT_TEXT } from "@/lib/consent/text";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signupSchema } from "@/lib/validators/signup";
 
@@ -35,6 +37,9 @@ export async function signupAction(
   _prev: SignupFormState,
   formData: FormData,
 ): Promise<SignupFormState> {
+  const requestId = await getRequestId();
+  const logger = log.child({ requestId, action: "signup" });
+
   const raw = {
     email: formData.get("email"),
     password: formData.get("password"),
@@ -76,7 +81,7 @@ export async function signupAction(
       emailRedirectTo = `${proto}://${host}/auth/callback`;
     }
   } catch (err) {
-    console.error("[signup] Kunde inte läsa request headers:", err);
+    logger.error("Kunde inte läsa request headers", { err });
   }
 
   // Anropa Supabase med explicit felhantering.
@@ -91,13 +96,13 @@ export async function signupAction(
 
     if (error) {
       signUpErrorStatus = error.status;
-      console.error("[signup] Supabase signUp returned error:", {
+      logger.warn("Supabase signUp returned error", {
         status: error.status,
         message: error.message,
         name: error.name,
       });
     } else {
-      console.info("[signup] Supabase signUp ok:", {
+      logger.info("Supabase signUp ok", {
         userId: data.user?.id,
         emailConfirmedAt: data.user?.email_confirmed_at,
         emailRedirectTo,
@@ -116,12 +121,12 @@ export async function signupAction(
             screenId: "signup",
           });
         } catch (consentErr) {
-          console.error("[signup] Failed to log consent (non-fatal):", consentErr);
+          logger.error("Failed to log consent (non-fatal)", { err: consentErr });
         }
       }
     }
   } catch (err) {
-    console.error("[signup] Unexpected error during Supabase signUp:", err);
+    logger.error("Unexpected error during Supabase signUp", { err });
     return {
       status: "error",
       fieldErrors: { form: konfigFel(err) },
