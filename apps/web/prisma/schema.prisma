@@ -60,6 +60,35 @@ enum ConsentAction {
   revoked
 }
 
+/// Kroppsområden som skada/kontraindikation kan gälla (M0-29, F-ON-04).
+/// Standardiserad checklista — läggs till försiktigt eftersom
+/// Adaptive Engine (M2) filtrerar övningar på dessa värden.
+enum InjuryArea {
+  back
+  knee
+  shoulder
+  pelvic_floor
+  diastasis
+  other
+}
+
+/// Grad av begränsning. `none` betyder att flaggan aktivt är rensad
+/// (till skillnad från att raden inte finns alls).
+enum InjurySeverity {
+  none
+  mild
+  moderate
+  severe
+}
+
+/// Audit-händelser på injury_flag. Rad skrivs av trigger vid
+/// INSERT/UPDATE/DELETE och kan aldrig ändras.
+enum InjuryAuditAction {
+  insert
+  update
+  delete
+}
+
 /// Append-only samtyckesloggning (ADR-004, M0-23).
 ///
 /// En rad per samtyckesbeslut. Aldrig UPDATE eller DELETE i application-
@@ -106,4 +135,40 @@ model Profile {
   updatedAt      DateTime    @updatedAt @map("updated_at")
 
   @@map("profile")
+}
+
+/// InjuryFlag — en rad per (användare, kroppsområde) som täcker
+/// nuvarande status för den regionen (C-02, M0-29).
+///
+/// Data-klass: 2 (Känslig, ADR-004). `note` är kolumn-krypterad
+/// med AES-256-GCM (se lib/crypto/column.ts). Aldrig loggad i klartext.
+///
+/// Adaptive Engine (M2) läser (area, severity) direkt — inte note.
+/// Trigger `injury_flag_audit_trg` skriver till InjuryFlagAudit på
+/// alla INSERT/UPDATE/DELETE.
+model InjuryFlag {
+  id        String         @id @default(uuid()) @db.Uuid
+  userId    String         @map("user_id") @db.Uuid
+  area      InjuryArea
+  severity  InjurySeverity @default(none)
+  note      Bytes?
+  createdAt DateTime       @default(now()) @map("created_at")
+  updatedAt DateTime       @updatedAt @map("updated_at")
+
+  @@unique([userId, area])
+  @@map("injury_flag")
+}
+
+/// Append-only audit-logg för injury_flag (M0-29 AC 2).
+/// Skrivs av databastrigger — application-koden kan inte kringgå den.
+/// Inga UPDATE/DELETE-policies i RLS.
+model InjuryFlagAudit {
+  id           String            @id @default(uuid()) @db.Uuid
+  injuryFlagId String            @map("injury_flag_id") @db.Uuid
+  userId       String            @map("user_id") @db.Uuid
+  action       InjuryAuditAction
+  changedAt    DateTime          @default(now()) @map("changed_at")
+
+  @@index([userId, changedAt(sort: Desc)])
+  @@map("injury_flag_audit")
 }
