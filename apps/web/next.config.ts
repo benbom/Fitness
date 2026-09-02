@@ -11,27 +11,50 @@ const config: NextConfig = {
   },
 };
 
+// Uppladdning av source maps + release-skapande kräver giltig
+// SENTRY_AUTH_TOKEN. Vi styr det via en enda "på-flagga":
+//   SENTRY_UPLOAD_SOURCEMAPS=true  → försöker ladda upp
+//   (default / annat)              → hoppa över helt
+//
+// Motivering: en utgången/ogiltig token får INTE blockera prod-deploy.
+// Att kräva aktiv opt-in gör det explicit när vi vill ladda upp, och
+// säkerställer att bygget alltid går även om Sentry-projektet raderats,
+// nyckeln roterats, eller Sentry har outage. Runtime error-reporting
+// funkar oavsett — det som saknas utan uppladdning är de-minifiering
+// av stacktraces i Sentry-UI.
+const uploadSourceMaps =
+  process.env.SENTRY_UPLOAD_SOURCEMAPS === "true" && Boolean(process.env.SENTRY_AUTH_TOKEN);
+
 const sentryOptions = {
-  // Auth token för att ladda upp source maps till Sentry
   authToken: process.env.SENTRY_AUTH_TOKEN,
 
   // Sentry-org och projekt — matchar sentry.io-projektet 'javascript-nextjs'
-  // under org 'lieber-tech'. Utan dessa laddas source-maps inte upp och
-  // stacktraces visar minifierad kod istället för TypeScript-källor.
+  // under org 'lieber-tech'.
   org: "lieber-tech",
   project: "javascript-nextjs",
 
-  // Tystnare bygg om Sentry-auth saknas (första lokala bygget kan sakna det)
+  // Tystnare bygg lokalt; verbose i CI
   silent: !process.env.CI,
 
-  // Ladda upp source maps även för client
+  // Ladda upp source maps även för client (om upload aktiverat)
   widenClientFileUpload: true,
 
   // Dölj source maps från publik åtkomst
   hideSourceMaps: true,
 
-  // Deaktivera Sentry-CLI-uppladdning om auth-token saknas
+  // Deaktivera Sentry-CLI-loggning
   disableLogger: true,
+
+  // Skippa alla nätverkscalls mot Sentry API vid build om vi inte
+  // aktivt sagt att vi vill ladda upp. Både source-map-upload och
+  // release-skapande styrs av samma flagga.
+  sourcemaps: {
+    disable: !uploadSourceMaps,
+  },
+  release: {
+    create: uploadSourceMaps,
+    finalize: uploadSourceMaps,
+  },
 
   // Tunnel-route är AV i M0 — det lägger middleware-rewrites som
   // kan förlänga edge-invocation och riskera MIDDLEWARE_INVOCATION_TIMEOUT.
