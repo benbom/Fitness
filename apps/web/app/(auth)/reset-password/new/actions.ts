@@ -3,6 +3,8 @@
 import { redirect } from "next/navigation";
 
 import { passwordErrorMessage, validatePassword } from "@/lib/auth/password";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { newPasswordSchema } from "@/lib/validators/reset-password";
 
@@ -22,6 +24,8 @@ export async function setNewPasswordAction(
   _prev: NewPasswordFormState,
   formData: FormData,
 ): Promise<NewPasswordFormState> {
+  const logger = log.child({ requestId: await getRequestId(), action: "set-new-password" });
+
   const raw = { password: formData.get("password") };
 
   const parsed = newPasswordSchema.safeParse(raw);
@@ -48,7 +52,7 @@ export async function setNewPasswordAction(
     const { error } = await supabase.auth.updateUser({ password });
 
     if (error) {
-      console.warn("[reset-new] Supabase updateUser returned error:", {
+      logger.warn("Supabase updateUser returned error", {
         status: error.status,
         message: error.message,
       });
@@ -62,7 +66,7 @@ export async function setNewPasswordAction(
       };
     }
   } catch (err) {
-    console.error("[reset-new] Unexpected error:", err);
+    logger.error("Unexpected error", { err });
     return {
       status: "error",
       fieldErrors: {

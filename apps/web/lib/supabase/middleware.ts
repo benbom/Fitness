@@ -1,6 +1,8 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+import { log } from "@/lib/log/logger";
+
 import type { Database } from "./types";
 
 interface CookieToSet {
@@ -31,6 +33,12 @@ export async function updateSupabaseSession(request: NextRequest) {
     return supabaseResponse;
   }
 
+  // Middleware kör i Edge — getRequestId (som läser next/headers) är onödig
+  // eftersom vi redan har request-objektet. x-vercel-id sätts av edge innan
+  // middleware kör.
+  const requestId = request.headers.get("x-request-id") ?? request.headers.get("x-vercel-id");
+  const logger = log.child({ requestId, layer: "middleware" });
+
   try {
     const supabase = createServerClient<Database>(url, key, {
       cookies: {
@@ -51,13 +59,13 @@ export async function updateSupabaseSession(request: NextRequest) {
 
     const { error } = await supabase.auth.getUser();
     if (error && error.message !== "Auth session missing!") {
-      console.warn("[middleware] Supabase getUser returned error:", {
+      logger.warn("Supabase getUser returned error", {
         status: error.status,
         message: error.message,
       });
     }
   } catch (err) {
-    console.error("[middleware] Unexpected error refreshing session:", err);
+    logger.error("Unexpected error refreshing session", { err });
   }
 
   return supabaseResponse;

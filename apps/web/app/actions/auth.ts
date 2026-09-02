@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
@@ -13,17 +15,18 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
  * anropa signOut, loggar eventuellt fel, och redirect:ar.
  */
 export async function logoutAction(): Promise<void> {
+  const logger = log.child({ requestId: await getRequestId(), action: "logout" });
   try {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.auth.signOut();
     if (error) {
-      console.warn("[logout] Supabase signOut returned error:", {
+      logger.warn("Supabase signOut returned error", {
         status: error.status,
         message: error.message,
       });
     }
   } catch (err) {
-    console.error("[logout] Unexpected error:", err);
+    logger.error("Unexpected error", { err });
   }
   redirect("/");
 }

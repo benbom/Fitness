@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { requireUser } from "@/lib/auth/require-user";
 import { encryptColumnNullable } from "@/lib/crypto/column";
 import { db } from "@/lib/db";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { injuriesInputSchema, injuryAreaEnum, injurySeverityEnum } from "@/lib/validators/injury";
 
 import type { InjuriesFormState } from "./state";
@@ -26,6 +28,11 @@ export async function saveInjuriesAction(
   formData: FormData,
 ): Promise<InjuriesFormState> {
   const user = await requireUser();
+  const logger = log.child({
+    requestId: await getRequestId(),
+    action: "save-injuries",
+    userId: user.id,
+  });
 
   // FormData har paralleller på areas[]/severities[]/notes[] i samma index.
   const areas = formData.getAll("area").filter((v): v is string => typeof v === "string");
@@ -86,7 +93,7 @@ export async function saveInjuriesAction(
       }
     });
   } catch (err) {
-    console.error("[injuries] Prisma transaction failed:", err);
+    logger.error("Prisma transaction failed", { err });
     return {
       status: "error",
       formError: "Kunde inte spara skade-flaggorna. Kontrollera Vercel Function Logs.",

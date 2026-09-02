@@ -2,6 +2,8 @@
 
 import { redirect } from "next/navigation";
 
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signinSchema } from "@/lib/validators/signin";
 
@@ -28,6 +30,8 @@ export async function signinAction(
   _prev: SigninFormState,
   formData: FormData,
 ): Promise<SigninFormState> {
+  const logger = log.child({ requestId: await getRequestId(), action: "signin" });
+
   const raw = {
     email: formData.get("email"),
     password: formData.get("password"),
@@ -55,7 +59,7 @@ export async function signinAction(
     const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
-      console.warn("[signin] Supabase signIn returned error:", {
+      logger.warn("Supabase signIn returned error", {
         status: error.status,
         message: error.message,
         name: error.name,
@@ -94,7 +98,7 @@ export async function signinAction(
       };
     }
   } catch (err) {
-    console.error("[signin] Unexpected error during Supabase signIn:", err);
+    logger.error("Unexpected error during Supabase signIn", { err });
     return {
       status: "error",
       fieldErrors: {
