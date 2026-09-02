@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth/require-user";
 import { db } from "@/lib/db";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { equipmentEnum, goalEnum, levelEnum, profileSchema } from "@/lib/validators/profile";
 
 import type { ProfileFormState } from "./state";
@@ -25,6 +27,11 @@ export async function saveProfileAction(
   formData: FormData,
 ): Promise<ProfileFormState> {
   const user = await requireUser();
+  const logger = log.child({
+    requestId: await getRequestId(),
+    action: "save-profile",
+    userId: user.id,
+  });
 
   // FormData ger back sträng/File — vi konverterar till arrays för multi-value fält
   const raw = {
@@ -66,7 +73,7 @@ export async function saveProfileAction(
       update: data,
     });
   } catch (err) {
-    console.error("[profile] Prisma upsert failed:", err);
+    logger.error("Prisma upsert failed", { err });
     return {
       status: "error",
       fieldErrors: {

@@ -25,8 +25,8 @@ import type { SignupFormState } from "./state";
  *
  * Felhantering:
  *  - Konfigurationsfel (env vars saknas, Supabase nås ej): visas som
- *    formulär-fel med tydlig text. Loggas fullt i console.error så
- *    Vercel Function Logs kan visa detaljer.
+ *    formulär-fel med tydlig text. Loggas fullt via strukturerad logger
+ *    så Vercel Function Logs kan visa detaljer.
  *  - Rate-limit (429): visas som e-post-fältfel.
  *  - Övriga Supabase-fel: loggas server-side, redirect ändå (anti-enum).
  *

@@ -7,6 +7,8 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/require-user";
 import { logConsent } from "@/lib/consent/log";
 import { db } from "@/lib/db";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { deleteAccountSchema } from "@/lib/validators/delete-account";
@@ -35,6 +37,11 @@ export async function deleteAccountAction(
   formData: FormData,
 ): Promise<DeleteAccountFormState> {
   const user = await requireUser();
+  const logger = log.child({
+    requestId: await getRequestId(),
+    action: "delete-account",
+    userId: user.id,
+  });
 
   const parsed = deleteAccountSchema.safeParse({
     action: formData.get("action"),
@@ -60,7 +67,7 @@ export async function deleteAccountAction(
       // Hard delete — FK CASCADE tar hand om profile + consent
       const { error } = await admin.auth.admin.deleteUser(user.id);
       if (error) throw error;
-      console.info("[account] Hard-deleted user", { userId: user.id });
+      logger.info("Hard-deleted user");
     } else {
       // Anonymize — behåll kontot men strippa personifierbart
       const anonymizedEmail = `anonymized-${randomUUID()}@vera.local`;
@@ -88,13 +95,13 @@ export async function deleteAccountAction(
           screenId: "profile_delete",
         });
       } catch (logErr) {
-        console.error("[account] Failed to log revoke consent (non-fatal):", logErr);
+        logger.error("Failed to log revoke consent (non-fatal)", { err: logErr });
       }
 
-      console.info("[account] Anonymized user", { userId: user.id });
+      logger.info("Anonymized user");
     }
   } catch (err) {
-    console.error("[account] Deletion failed:", err);
+    logger.error("Deletion failed", { err });
     return {
       status: "error",
       fieldErrors: {
@@ -109,7 +116,7 @@ export async function deleteAccountAction(
     const supabase = await createSupabaseServerClient();
     await supabase.auth.signOut();
   } catch (err) {
-    console.warn("[account] signOut after deletion failed (non-fatal):", err);
+    logger.warn("signOut after deletion failed (non-fatal)", { err });
   }
 
   redirect("/goodbye");

@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/require-user";
 import { decryptColumnNullable } from "@/lib/crypto/column";
 import { db } from "@/lib/db";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import type { InjuryArea, InjurySeverity } from "@/lib/validators/injury";
 import { INJURY_AREAS } from "@/lib/validators/injury";
 
@@ -17,6 +19,11 @@ export const metadata = {
 
 export default async function InjuriesPage() {
   const user = await requireUser("/profile/injuries");
+  const logger = log.child({
+    requestId: await getRequestId(),
+    page: "injuries",
+    userId: user.id,
+  });
 
   const existing = await db.injuryFlag.findMany({
     where: { userId: user.id },
@@ -29,7 +36,7 @@ export default async function InjuriesPage() {
     try {
       plain = decryptColumnNullable(row.note) ?? "";
     } catch (err) {
-      console.error("[injuries] Kunde inte dekryptera note — visar tomt fält:", err);
+      logger.error("Kunde inte dekryptera note — visar tomt fält", { err, area: row.area });
     }
     byArea.set(row.area, { severity: row.severity, note: plain });
   }

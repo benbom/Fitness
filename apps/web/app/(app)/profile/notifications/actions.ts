@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth/require-user";
 import { db } from "@/lib/db";
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import {
   notificationCategoryKeys,
   notificationPrefsSchema,
@@ -30,6 +32,11 @@ export async function saveNotificationPrefsAction(
   formData: FormData,
 ): Promise<NotificationPrefsFormState> {
   const user = await requireUser();
+  const logger = log.child({
+    requestId: await getRequestId(),
+    action: "save-notif-prefs",
+    userId: user.id,
+  });
 
   const categories = {} as Record<NotificationCategoryKey, { enabled: boolean; frequency: string }>;
   for (const key of notificationCategoryKeys) {
@@ -66,7 +73,7 @@ export async function saveNotificationPrefsAction(
       update: { notifPrefs: prefs },
     });
   } catch (err) {
-    console.error("[notif-prefs] Prisma upsert failed:", err);
+    logger.error("Prisma upsert failed", { err });
     return {
       status: "error",
       formError: "Kunde inte spara preferenserna. Kontrollera Vercel Function Logs.",

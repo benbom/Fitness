@@ -3,6 +3,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { log } from "@/lib/log/logger";
+import { getRequestId } from "@/lib/log/request-id";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { resetRequestSchema } from "@/lib/validators/reset-password";
 
@@ -20,6 +22,8 @@ export async function requestResetAction(
   _prev: ResetRequestFormState,
   formData: FormData,
 ): Promise<ResetRequestFormState> {
+  const logger = log.child({ requestId: await getRequestId(), action: "request-reset" });
+
   const raw = { email: formData.get("email") };
 
   const parsed = resetRequestSchema.safeParse(raw);
@@ -43,7 +47,7 @@ export async function requestResetAction(
       redirectTo = `${proto}://${host}/auth/callback?next=/reset-password/new`;
     }
   } catch (err) {
-    console.error("[reset] Kunde inte läsa request headers:", err);
+    logger.error("Kunde inte läsa request headers", { err });
   }
 
   try {
@@ -53,7 +57,7 @@ export async function requestResetAction(
     });
 
     if (error) {
-      console.warn("[reset] Supabase resetPasswordForEmail returned error:", {
+      logger.warn("Supabase resetPasswordForEmail returned error", {
         status: error.status,
         message: error.message,
       });
@@ -69,7 +73,7 @@ export async function requestResetAction(
       }
     }
   } catch (err) {
-    console.error("[reset] Unexpected error:", err);
+    logger.error("Unexpected error", { err });
     return {
       status: "error",
       fieldErrors: {
