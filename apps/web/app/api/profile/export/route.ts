@@ -1,8 +1,9 @@
 import { requireUser } from "@/lib/auth/require-user";
+import { decryptColumnNullable } from "@/lib/crypto/column";
 import { db } from "@/lib/db";
 
 /**
- * GDPR-dataexport (M0-24, F-PR-03).
+ * GDPR-dataexport (M0-24, M0-39, F-PR-03).
  *
  * Returnerar en JSON-fil med all data Vera lagrar om användaren.
  * Content-Disposition: attachment triggar browser-nedladdning.
@@ -11,6 +12,8 @@ import { db } from "@/lib/db";
  *  - user (id, email, timestamps från Supabase auth.users)
  *  - profile (mål, nivå, utrustning, dagar, tid)
  *  - consent_history (hela append-only-loggen med textShown)
+ *  - injury_flags (Klass 2 — note dekrypteras så användaren ser klartext
+ *    av sina egna anteckningar)
  *
  * När fler tabeller läggs till (cykel, träningslogg, wearable-sync)
  * utökas payload:en här. Regel: allt användaren äger i vår databas
@@ -23,13 +26,34 @@ import { db } from "@/lib/db";
 export async function GET() {
   const user = await requireUser("/profile/data");
 
-  const [profile, consents] = await Promise.all([
+  const [profile, consents, injuryFlags] = await Promise.all([
     db.profile.findUnique({ where: { id: user.id } }),
     db.consent.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
     }),
+    db.injuryFlag.findMany({
+      where: { userId: user.id },
+      orderBy: { area: "asc" },
+    }),
   ]);
+
+  const injuryFlagsExported = injuryFlags.map((row) => {
+    let note: string | null = null;
+    try {
+      note = decryptColumnNullable(row.note);
+    } catch (err) {
+      console.error("[export] Kunde inte dekryptera injury note:", err);
+    }
+    return {
+      id: row.id,
+      area: row.area,
+      severity: row.severity,
+      note,
+      created_at: row.createdAt,
+      updated_at: row.updatedAt,
+    };
+  });
 
   const payload = {
     meta: {
@@ -48,6 +72,7 @@ export async function GET() {
     },
     profile,
     consent_history: consents,
+    injury_flags: injuryFlagsExported,
   };
 
   const filename = `vera-export-${new Date().toISOString().slice(0, 10)}.json`;
