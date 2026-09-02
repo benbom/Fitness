@@ -12,9 +12,10 @@ export const metadata = {
 export default async function DataPage() {
   const user = await requireUser("/profile/data");
 
-  const [profileExists, consentCount] = await Promise.all([
+  const [profileExists, consentCount, injuryCount] = await Promise.all([
     db.profile.findUnique({ where: { id: user.id }, select: { id: true } }),
     db.consent.count({ where: { userId: user.id } }),
+    db.injuryFlag.count({ where: { userId: user.id } }),
   ]);
 
   return (
@@ -59,6 +60,14 @@ export default async function DataPage() {
                 Samtyckesrader
               </dt>
               <dd className="text-foreground">{consentCount}</dd>
+            </div>
+            <div className="flex flex-col gap-1">
+              <dt className="font-mono text-xs uppercase tracking-widest text-muted-foreground">
+                Skade-flaggor
+              </dt>
+              <dd className="text-foreground">
+                {injuryCount === 0 ? "Inga" : `${injuryCount} st (krypterade)`}
+              </dd>
             </div>
             <div className="flex flex-col gap-1">
               <dt className="font-mono text-xs uppercase tracking-widest text-muted-foreground">

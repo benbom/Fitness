@@ -72,8 +72,11 @@ export async function deleteAccountAction(
       });
       if (updateErr) throw updateErr;
 
-      // 2) Radera profilrad explicit (FK CASCADE triggas inte utan user-delete)
+      // 2) Radera personifierbara rader explicit — FK CASCADE triggas inte
+      //    utan user-delete, så vi rensar profile + injury_flag manuellt.
+      //    Consent behålls (append-only audit; revoked-raden loggas nedan).
       await db.profile.deleteMany({ where: { id: user.id } });
+      await db.injuryFlag.deleteMany({ where: { userId: user.id } });
 
       // 3) Logga att samtycket dragits tillbaka (audit trail)
       try {

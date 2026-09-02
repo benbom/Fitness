@@ -7,6 +7,7 @@ const {
   updateUserByIdMock,
   signOutMock,
   profileDeleteManyMock,
+  injuryDeleteManyMock,
   logConsentMock,
 } = vi.hoisted(() => ({
   FAKE_USER: { id: "user-uuid-1234", email: "u@x.co" },
@@ -14,6 +15,7 @@ const {
   updateUserByIdMock: vi.fn(),
   signOutMock: vi.fn(async () => ({ error: null })),
   profileDeleteManyMock: vi.fn(async () => ({ count: 1 })),
+  injuryDeleteManyMock: vi.fn(async () => ({ count: 0 })),
   logConsentMock: vi.fn(async () => undefined),
 }));
 
@@ -47,6 +49,7 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/lib/db", () => ({
   db: {
     profile: { deleteMany: profileDeleteManyMock },
+    injuryFlag: { deleteMany: injuryDeleteManyMock },
   },
 }));
 
@@ -99,8 +102,9 @@ describe("deleteAccountAction", () => {
     expect(deleteUserMock).toHaveBeenCalledTimes(1);
     expect(deleteUserMock).toHaveBeenCalledWith(FAKE_USER.id);
     expect(updateUserByIdMock).not.toHaveBeenCalled();
-    // Ingen manuell profil-radering — FK CASCADE tar hand om det
+    // Ingen manuell radering — FK CASCADE tar hand om profile + injury_flag
     expect(profileDeleteManyMock).not.toHaveBeenCalled();
+    expect(injuryDeleteManyMock).not.toHaveBeenCalled();
     expect(signOutMock).toHaveBeenCalledTimes(1);
   });
 
@@ -121,8 +125,10 @@ describe("deleteAccountAction", () => {
     expect(updates.email).toMatch(/^anonymized-[a-f0-9-]+@vera\.local$/);
     expect(updates.user_metadata?.anonymized_at).toBeTruthy();
 
-    // Profil raderad explicit (FK CASCADE triggas inte utan user-delete)
+    // Profil + injury_flag raderade explicit (FK CASCADE triggas inte
+    // utan user-delete; consent behålls som append-only audit trail).
     expect(profileDeleteManyMock).toHaveBeenCalledWith({ where: { id: FAKE_USER.id } });
+    expect(injuryDeleteManyMock).toHaveBeenCalledWith({ where: { userId: FAKE_USER.id } });
 
     // Consent loggat som revoked
     expect(logConsentMock).toHaveBeenCalledWith({
