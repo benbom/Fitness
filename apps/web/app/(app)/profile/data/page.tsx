@@ -97,6 +97,18 @@ export default async function DataPage() {
 
         <section className="rounded-lg border border-border bg-card p-6">
           <div className="mb-4 space-y-1">
+            <h2 className="font-display text-2xl font-medium tracking-tight">Notifikationer</h2>
+            <p className="text-sm text-muted-foreground">
+              Bestäm vad du vill höra av oss — och när. Marknadsföring är av som standard.
+            </p>
+          </div>
+          <Button asChild size="lg" variant="secondary">
+            <Link href="/profile/notifications">Ändra preferenser</Link>
+          </Button>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-6">
+          <div className="mb-4 space-y-1">
             <h2 className="font-display text-2xl font-medium tracking-tight">Radera konto</h2>
             <p className="text-sm text-muted-foreground">
               Ta bort allt Vera vet om dig, eller anonymisera för intern statistik. Går inte att
