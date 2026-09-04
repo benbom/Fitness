@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { LogoutButton } from "@/components/logout-button";
 import { Button } from "@/components/ui/button";
+import { hasCompletedOnboarding } from "@/lib/onboarding/status";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
@@ -9,6 +10,8 @@ export default async function HomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const needsOnboarding = user ? !(await hasCompletedOnboarding(user.id)) : false;
 
   return (
     <main className="flex min-h-svh flex-col">
@@ -56,13 +59,26 @@ export default async function HomePage() {
           {user ? (
             <div className="space-y-6">
               <p className="max-w-2xl text-pretty font-display text-xl leading-snug text-muted-foreground">
-                Du är inloggad som <strong className="text-foreground">{user.email}</strong>. Sätt
-                din profil så vi vet vilka pass som passar dig — du kan ändra dem när som helst.
+                Du är inloggad som <strong className="text-foreground">{user.email}</strong>.{" "}
+                {needsOnboarding
+                  ? "Kör igenom onboarding så vi vet vilka pass som passar dig."
+                  : "Din profil är satt — justera preferenser eller titta på din data när du vill."}
               </p>
               <div className="flex flex-col gap-3 pt-2 sm:flex-row">
-                <Button size="lg" asChild>
-                  <Link href="/profile/setup">Sätt din profil</Link>
-                </Button>
+                {needsOnboarding ? (
+                  <Button size="lg" asChild>
+                    <Link href="/onboarding/mal">Starta onboarding</Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button size="lg" asChild>
+                      <Link href="/profile/setup">Justera profil</Link>
+                    </Button>
+                    <Button size="lg" variant="outline" asChild>
+                      <Link href="/profile/data">Din data</Link>
+                    </Button>
+                  </>
+                )}
               </div>
               <p className="max-w-2xl text-sm text-muted-foreground">
                 Din träningsplan och första passet dyker upp här när M1 (Core träning) landar. Följ

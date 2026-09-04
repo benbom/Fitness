@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -18,12 +19,21 @@ import { INITIAL_NOTIF_PREFS_STATE } from "./state";
 
 interface NotificationsFormProps {
   initial: NotificationPrefs;
+  /** I onboarding-läge: visa "Fortsätt →"-knapp efter save + skip-länk. */
+  nextHref?: string;
+  nextLabel?: string;
+  skipHref?: string;
 }
 
 const FREQUENCIES = ["immediate", "daily", "weekly", "off"] as const;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
-export function NotificationsForm({ initial }: NotificationsFormProps) {
+export function NotificationsForm({
+  initial,
+  nextHref,
+  nextLabel = "Slutför →",
+  skipHref,
+}: NotificationsFormProps) {
   const [state, formAction] = useActionState(
     saveNotificationPrefsAction,
     INITIAL_NOTIF_PREFS_STATE,
@@ -45,9 +55,14 @@ export function NotificationsForm({ initial }: NotificationsFormProps) {
       {saved ? (
         <div
           role="status"
-          className="rounded-md border border-accent/40 bg-accent/10 p-4 text-sm text-accent-foreground"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-accent/40 bg-accent/10 p-4 text-sm text-accent-foreground"
         >
-          Sparat. Ändringarna gäller från nästa notis.
+          <span>Sparat. Ändringarna gäller från nästa notis.</span>
+          {nextHref ? (
+            <Button asChild size="sm">
+              <Link href={nextHref}>{nextLabel}</Link>
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -162,7 +177,17 @@ export function NotificationsForm({ initial }: NotificationsFormProps) {
         </fieldset>
       </section>
 
-      <SubmitButton />
+      <div className="flex flex-wrap items-center gap-4">
+        <SubmitButton />
+        {skipHref ? (
+          <Link
+            href={skipHref}
+            className="font-mono text-xs uppercase tracking-widest text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Hoppa över →
+          </Link>
+        ) : null}
+      </div>
     </form>
   );
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -13,11 +14,20 @@ import { INITIAL_INJURIES_STATE, type InjuryFormEntry } from "./state";
 
 interface InjuriesFormProps {
   initial: InjuryFormEntry[];
+  /** I onboarding-läge: visa "Fortsätt →"-knapp efter save + skip-länk. */
+  nextHref?: string;
+  nextLabel?: string;
+  skipHref?: string;
 }
 
 const SEVERITIES: InjurySeverity[] = ["none", "mild", "moderate", "severe"];
 
-export function InjuriesForm({ initial }: InjuriesFormProps) {
+export function InjuriesForm({
+  initial,
+  nextHref,
+  nextLabel = "Fortsätt →",
+  skipHref,
+}: InjuriesFormProps) {
   const [state, formAction] = useActionState(saveInjuriesAction, INITIAL_INJURIES_STATE);
   const saved = state.status === "saved";
   const formError = state.status === "error" ? state.formError : undefined;
@@ -36,9 +46,14 @@ export function InjuriesForm({ initial }: InjuriesFormProps) {
       {saved ? (
         <div
           role="status"
-          className="rounded-md border border-accent/40 bg-accent/10 p-4 text-sm text-accent-foreground"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-accent/40 bg-accent/10 p-4 text-sm text-accent-foreground"
         >
-          Sparat. Du kan uppdatera när som helst.
+          <span>Sparat. Du kan uppdatera när som helst.</span>
+          {nextHref ? (
+            <Button asChild size="sm">
+              <Link href={nextHref}>{nextLabel}</Link>
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -85,7 +100,17 @@ export function InjuriesForm({ initial }: InjuriesFormProps) {
         ))}
       </div>
 
-      <SubmitButton />
+      <div className="flex flex-wrap items-center gap-4">
+        <SubmitButton />
+        {skipHref ? (
+          <Link
+            href={skipHref}
+            className="font-mono text-xs uppercase tracking-widest text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            Hoppa över →
+          </Link>
+        ) : null}
+      </div>
     </form>
   );
 }

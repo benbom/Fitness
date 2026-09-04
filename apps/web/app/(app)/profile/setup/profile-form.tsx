@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
@@ -25,9 +26,16 @@ interface ProfileFormProps {
     daysPerWeek: number | null;
     timePerSession: number | null;
   };
+  /**
+   * Om satt: efter lyckad spara visas en "Fortsätt →"-knapp som länkar
+   * dit istället för det vanliga bekräftelsemeddelandet. Används i
+   * onboarding-flödet för att gå vidare till nästa steg.
+   */
+  nextHref?: string;
+  nextLabel?: string;
 }
 
-export function ProfileForm({ initial }: ProfileFormProps) {
+export function ProfileForm({ initial, nextHref, nextLabel = "Fortsätt →" }: ProfileFormProps) {
   const [state, formAction] = useActionState(saveProfileAction, INITIAL_PROFILE_STATE);
 
   const err = state.status === "error" ? state.fieldErrors : {};
@@ -47,9 +55,14 @@ export function ProfileForm({ initial }: ProfileFormProps) {
       {saved ? (
         <div
           role="status"
-          className="rounded-md border border-accent/40 bg-accent/10 p-4 text-sm text-accent-foreground"
+          className="flex flex-wrap items-center justify-between gap-4 rounded-md border border-accent/40 bg-accent/10 p-4 text-sm text-accent-foreground"
         >
-          Profilen är sparad. Du kan ändra den när du vill.
+          <span>Profilen är sparad. Du kan ändra den när du vill.</span>
+          {nextHref ? (
+            <Button asChild size="sm">
+              <Link href={nextHref}>{nextLabel}</Link>
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
